@@ -8,7 +8,7 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import mpl_toolkits.mplot3d.axes3d as p3
 # import cv2
 from textwrap import wrap
-
+    
 
 def list_cut_average(ll, intervals):
     if intervals == 1:

@@ -14,9 +14,12 @@ from model.cfg_sampler import ClassifierFreeSampleModel
 from data_loaders.get_data import get_dataset_loader
 from data_loaders.humanml.scripts.motion_process import recover_from_ric
 import data_loaders.humanml.utils.paramUtil as paramUtil
-from data_loaders.humanml.utils.plot_script import plot_3d_motion
+from data_loaders.hands_datasets.utils.visualizers import plot_3d_hand_motion
+from data_loaders.hands_datasets.brics_hands_dataset import load_3d_keypoints
 import shutil
 from data_loaders.tensors import collate
+import json
+import ujson
 
 
 def main():
@@ -25,9 +28,10 @@ def main():
     out_path = args.output_dir
     name = os.path.basename(os.path.dirname(args.model_path))
     niter = os.path.basename(args.model_path).replace('model', '').replace('.pt', '')
-    max_frames = 196 if args.dataset in ['kit', 'humanml'] else 60
+    max_frames = 200 if args.dataset.startswith('brics-hands') else 196
     fps = 12.5 if args.dataset == 'kit' else 20
-    n_frames = min(max_frames, int(args.motion_length*fps))
+    n_frames = max(max_frames, int(args.motion_length*fps))
+    
     is_using_data = not any([args.input_text, args.text_prompt, args.action_file, args.action_name])
     dist_util.setup_dist(args.device)
     if out_path == '':
@@ -48,6 +52,9 @@ def main():
             texts = fr.readlines()
         texts = [s.replace('\n', '') for s in texts]
         args.num_samples = len(texts)
+        if args.num_samples > args.batch_size:
+            texts = texts[::(len(texts)//args.batch_size) + 1]
+            args.num_samples = len(texts)
     elif args.action_name:
         action_text = [args.action_name]
         args.num_samples = 1
@@ -132,6 +139,8 @@ def main():
             sample = recover_from_ric(sample, n_joints)
             sample = sample.view(-1, *sample.shape[2:]).permute(0, 2, 3, 1)
 
+        sample = data.dataset.t2m_dataset.inv_transform(sample.cpu().permute(0, 3, 1, 2)).float() # [bs, njoints, 6, seqlen] -> [bs, seqlen, njoints, 6]
+        sample = sample.permute(0, 2, 3, 1).float() # [bs, seqlen, njoints, 6] -> [bs, njoints, 6, seqlen]
         rot2xyz_pose_rep = 'xyz' if model.data_rep in ['xyz', 'hml_vec'] else model.data_rep
         rot2xyz_mask = None if rot2xyz_pose_rep == 'xyz' else model_kwargs['y']['mask'].reshape(args.batch_size, n_frames).bool()
         sample = model.rot2xyz(x=sample, mask=rot2xyz_mask, pose_rep=rot2xyz_pose_rep, glob=True, translation=True,
@@ -178,22 +187,29 @@ def main():
     sample_print_template, row_print_template, all_print_template, \
     sample_file_template, row_file_template, all_file_template = construct_template_variables(args.unconstrained)
 
+
+    train_info_path = os.path.join(os.path.dirname(args.model_path), 'train_info.json')
+    with open(train_info_path, 'r') as f:
+        train_info = json.load(f)
     for sample_i in range(args.num_samples):
         rep_files = []
         for rep_i in range(args.num_repetitions):
             caption = all_text[rep_i*args.batch_size + sample_i]
             length = all_lengths[rep_i*args.batch_size + sample_i]
             motion = all_motions[rep_i*args.batch_size + sample_i].transpose(2, 0, 1)[:length]
-            save_file = sample_file_template.format(sample_i, rep_i)
+            save_file = sample_file_template.format(sample_i, rep_i) # will be overwrite
+            
             print(sample_print_template.format(caption, sample_i, rep_i, save_file))
             animation_save_path = os.path.join(out_path, save_file)
-            plot_3d_motion(animation_save_path, skeleton, motion, dataset=args.dataset, title=caption, fps=fps)
-            # Credit for visualization: https://github.com/EricGuo5513/text-to-motion
-            rep_files.append(animation_save_path)
-
-        sample_files = save_multiple_samples(args, out_path,
-                                               row_print_template, all_print_template, row_file_template, all_file_template,
-                                               caption, num_samples_in_out_file, rep_files, sample_files, sample_i)
+            if args.input_text != '':
+                text = texts[sample_i].replace('\n', '')
+                save_file = text.replace(' ', '_') + '.mp4'
+            motion_dir = os.path.join('/users/rfu7/ssrinath/datasets/Action/brics-mini', train_info[text][0])
+            motion_id = train_info[text][1]
+            gt_motion_path = os.path.join(motion_dir, 'keypoints_3d', str(motion_id).zfill(3))
+            gt_motion = load_3d_keypoints(gt_motion_path)
+        
+            plot_3d_hand_motion(motion, gt_motion=gt_motion, src_root_path=motion_dir, ith=sample_i+1, out_path=out_path, save_file=save_file)
 
     abs_path = os.path.abspath(out_path)
     print(f'[Done] Results are at [{abs_path}]')
@@ -244,12 +260,12 @@ def construct_template_variables(unconstrained):
 
 
 def load_dataset(args, max_frames, n_frames):
-    data = get_dataset_loader(name=args.dataset,
+    data = get_dataset_loader(args, name=args.dataset,
                               batch_size=args.batch_size,
                               num_frames=max_frames,
                               split='test',
                               hml_mode='text_only')
-    if args.dataset in ['kit', 'humanml']:
+    if args.dataset in ['kit', 'humanml'] or args.dataset.startswith('brics-hands'):
         data.dataset.t2m_dataset.fixed_length = n_frames
     return data
 

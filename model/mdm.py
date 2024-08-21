@@ -124,7 +124,7 @@ class MDM(nn.Module):
     def encode_text(self, raw_text):
         # raw_text - list (batch_size length) of strings with input text prompts
         device = next(self.parameters()).device
-        max_text_len = 20 if self.dataset in ['humanml', 'kit'] else None  # Specific hardcoding for humanml dataset
+        max_text_len = 20 if (self.dataset in ['humanml', 'kit'] or self.dataset.startswith('brics-hands')) else None  # Specific hardcoding for humanml dataset
         if max_text_len is not None:
             default_context_length = 77
             context_length = max_text_len + 2 # start_token + 20 + end_token
@@ -143,6 +143,7 @@ class MDM(nn.Module):
         x: [batch_size, njoints, nfeats, max_frames], denoted x_t in the paper
         timesteps: [batch_size] (int)
         """
+
         bs, njoints, nfeats, nframes = x.shape
         emb = self.embed_timestep(timesteps)  # [1, bs, d]
 

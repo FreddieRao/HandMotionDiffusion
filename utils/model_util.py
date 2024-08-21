@@ -32,7 +32,12 @@ def get_model_args(args, data):
     njoints = 25
     nfeats = 6
 
-    if args.dataset == 'humanml':
+    if args.dataset.startswith('brics-hands'):
+        # TODO Support Manso
+        data_rep = 'xyz'
+        njoints = 42
+        nfeats = 3
+    elif args.dataset == 'humanml':
         data_rep = 'hml_vec'
         njoints = 263
         nfeats = 1
@@ -40,7 +45,7 @@ def get_model_args(args, data):
         data_rep = 'hml_vec'
         njoints = 251
         nfeats = 1
-
+        
     return {'modeltype': '', 'njoints': njoints, 'nfeats': nfeats, 'num_actions': num_actions,
             'translation': True, 'pose_rep': 'rot6d', 'glob': True, 'glob_rot': True,
             'latent_dim': args.latent_dim, 'ff_size': 1024, 'num_layers': args.layers, 'num_heads': 4,

@@ -1,0 +1,46 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 3743796
+##  Job Name : train_mdm.sh
+##  Nodelist : gpu2102
+##      CPUs : 4
+##  Mem/Node : 65536 MB
+## Directory : /oscar/data/ssrinath/users/rfu7/code/24Text2Action/MotionDiffusionModel
+##   Job Started : Mon Jul 22 10:42:04 PM EDT 2024
+###############################################################################
+no change     /oscar/runtime/software/external/miniconda3/23.11.0/condabin/conda
+no change     /oscar/runtime/software/external/miniconda3/23.11.0/bin/conda
+no change     /oscar/runtime/software/external/miniconda3/23.11.0/bin/conda-env
+no change     /oscar/runtime/software/external/miniconda3/23.11.0/bin/activate
+no change     /oscar/runtime/software/external/miniconda3/23.11.0/bin/deactivate
+no change     /oscar/runtime/software/external/miniconda3/23.11.0/etc/profile.d/conda.sh
+no change     /oscar/runtime/software/external/miniconda3/23.11.0/etc/fish/conf.d/conda.fish
+no change     /oscar/runtime/software/external/miniconda3/23.11.0/shell/condabin/Conda.psm1
+no change     /oscar/runtime/software/external/miniconda3/23.11.0/shell/condabin/conda-hook.ps1
+no change     /oscar/runtime/software/external/miniconda3/23.11.0/lib/python3.10/site-packages/xontrib/conda.xsh
+no change     /oscar/runtime/software/external/miniconda3/23.11.0/etc/profile.d/conda.csh
+no change     /users/rfu7/.bashrc
+No action taken.
+rm: cannot remove 'save/unconstrained_vanilla_v1_SP_SS_s16_step50_bs16': No such file or directory
+/users/rfu7/data/anaconda/mdm_env/lib/python3.10/site-packages/torch/utils/data/dataloader.py:560: UserWarning: This DataLoader will create 8 worker processes in total. Our suggested max number of worker in current system is 4, which is smaller than what this DataLoader is going to create. Please be aware that excessive worker creation might get DataLoader running slow or even freeze, lower the worker number to avoid potential slowness/freeze if necessary.
+  warnings.warn(_create_warning_msg(
+Traceback (most recent call last):
+  File "/users/rfu7/data/anaconda/mdm_env/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/users/rfu7/data/anaconda/mdm_env/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/oscar/data/ssrinath/users/rfu7/code/24Text2Action/MotionDiffusionModel/train/train_mdm.py", line 49, in <module>
+    main()
+  File "/oscar/data/ssrinath/users/rfu7/code/24Text2Action/MotionDiffusionModel/train/train_mdm.py", line 45, in main
+    TrainLoop(args, train_platform, model, diffusion, data).run_loop()
+  File "/oscar/data/ssrinath/users/rfu7/code/24Text2Action/MotionDiffusionModel/train/training_loop.py", line 53, in __init__
+    self.num_epochs = self.num_steps // len(self.data) + 1
+ZeroDivisionError: integer division or modulo by zero
+creating data loader...
+Reading ./dataset/brics_hands_opt.txt
+Loading dataset brics_hands ...
+creating model and diffusion...
+TRANS_ENC init
+EMBED TEXT
+Loading CLIP...
+Total params: 17.74M
+Training...

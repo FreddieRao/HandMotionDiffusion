@@ -18,6 +18,7 @@ def parse_and_load_from_model(parser):
     # load args from model
     model_path = get_model_path_from_args()
     args_path = os.path.join(os.path.dirname(model_path), 'args.json')
+    
     assert os.path.exists(args_path), 'Arguments json file was not found!'
     with open(args_path, 'r') as fr:
         model_args = json.load(fr)
@@ -98,7 +99,7 @@ def add_model_options(parser):
 
 def add_data_options(parser):
     group = parser.add_argument_group('dataset')
-    group.add_argument("--dataset", default='humanml', choices=['humanml', 'kit', 'humanact12', 'uestc'], type=str,
+    group.add_argument("--dataset", default='humanml', type=str,
                        help="Dataset name (choose from list).")
     group.add_argument("--data_dir", default="", type=str,
                        help="If empty, will use defaults according to the specified dataset.")
@@ -204,10 +205,12 @@ def add_evaluation_options(parser):
 def get_cond_mode(args):
     if args.unconstrained:
         cond_mode = 'no_cond'
-    elif args.dataset in ['kit', 'humanml']:
-        cond_mode = 'text'
     else:
-        cond_mode = 'action'
+        cond_mode = 'text'
+    # elif args.dataset in ['kit', 'humanml']:
+    #     cond_mode = 'text'
+    # else:
+    #     cond_mode = 'action'
     return cond_mode
 
 

@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 
 def lengths_to_mask(lengths, max_len):
@@ -58,7 +59,7 @@ def collate(batch):
 def t2m_collate(batch):
     # batch.sort(key=lambda x: x[3], reverse=True)
     adapted_batch = [{
-        'inp': torch.tensor(b[4].T).float().unsqueeze(1), # [seqlen, J] -> [J, 1, seqlen]
+        'inp': torch.tensor(b[4].T).float().unsqueeze(1) if (len(b[4].shape)==2 or len(b[4].shape)==1) else torch.tensor(np.transpose(b[4], (1, 2, 0))).float(), # [seqlen, J] -> [J, 1, seqlen]
         'text': b[2], #b[0]['caption']
         'tokens': b[6],
         'lengths': b[5],
