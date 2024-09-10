@@ -36,7 +36,8 @@ def get_dataset(args, name, num_frames, split='train', hml_mode='train'):
     if name.startswith('brics-hands'):
         sp = True if 'SP' in name else False # use single person data
         ss = True if 'SS' in name else False # use single scene data
-        dataset = DATA(args=args, split=split, num_frames=num_frames, mode=hml_mode, single_person=sp, single_scene=ss)
+        anno = True if 'ANNO' in name else False
+        dataset = DATA(args=args, split=split, num_frames=num_frames, mode=hml_mode, single_person=sp, single_scene=ss, use_annotated_text = anno)
         
     elif name in ["humanml", "kit"]:
         dataset = DATA(split=split, num_frames=num_frames, mode=hml_mode)

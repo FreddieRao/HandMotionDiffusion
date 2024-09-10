@@ -28,7 +28,7 @@ def main():
     out_path = args.output_dir
     name = os.path.basename(os.path.dirname(args.model_path))
     niter = os.path.basename(args.model_path).replace('model', '').replace('.pt', '')
-    max_frames = 200 if args.dataset.startswith('brics-hands') else 196
+    max_frames = 1000 if args.dataset.startswith('brics-hands') else 196
     fps = 12.5 if args.dataset == 'kit' else 20
     n_frames = max(max_frames, int(args.motion_length*fps))
     
@@ -204,10 +204,12 @@ def main():
             if args.input_text != '':
                 text = texts[sample_i].replace('\n', '')
                 save_file = text.replace(' ', '_') + '.mp4'
-            motion_dir = os.path.join('/users/rfu7/ssrinath/datasets/Action/brics-mini', train_info[text][0])
-            motion_id = train_info[text][1]
+            motion_dir = os.path.join('/users/rfu7/ssrinath/datasets/Action/brics-mini', train_info[text]['scene'])
+            motion_id = int(train_info[text]['seq'])
+            sf = train_info[text].get('start_frame_id', 0)
+            ef = train_info[text].get('end_frame_id', -1)
             gt_motion_path = os.path.join(motion_dir, 'keypoints_3d', str(motion_id).zfill(3))
-            gt_motion = load_3d_keypoints(gt_motion_path)
+            gt_motion = load_3d_keypoints(gt_motion_path)[sf:ef]
         
             plot_3d_hand_motion(motion, gt_motion=gt_motion, src_root_path=motion_dir, ith=sample_i+1, out_path=out_path, save_file=save_file)
 
